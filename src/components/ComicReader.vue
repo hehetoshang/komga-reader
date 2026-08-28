@@ -34,7 +34,14 @@
       </Transition>
 
       <main class="kr-stage">
-        <div v-if="!continuous" class="kr-paged" :class="`kr-direction--${settings.direction}`">
+        <div
+          v-if="!continuous"
+          class="kr-paged"
+          :class="[
+            `kr-direction--${settings.direction}`,
+            { 'kr-paged--fit-screen': settings.pagedScale === 'screen' },
+          ]"
+        >
           <div
             class="kr-spread"
             :class="[
@@ -662,7 +669,13 @@ defineExpose({
 .kr-paged {
   display: grid;
   place-items: center;
+  min-width: 0;
+  min-height: 0;
   overflow: auto;
+}
+
+.kr-paged--fit-screen {
+  overflow: hidden;
 }
 
 .kr-spread {
@@ -671,6 +684,12 @@ defineExpose({
   justify-content: center;
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.kr-paged--fit-screen .kr-spread {
+  overflow: hidden;
 }
 
 .kr-spread--animated img {
@@ -708,8 +727,11 @@ defineExpose({
 }
 
 .kr-scale--screen img {
+  flex: 1 1 0;
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
 }
 
 .kr-spread--double.kr-scale--screen img {

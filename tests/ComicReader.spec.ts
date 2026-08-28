@@ -53,6 +53,14 @@ describe('ComicReader', () => {
     expect(progress.pageNumber).toBe(3)
   })
 
+  it('uses a non-scrolling paged viewport only for fit-screen scale', async () => {
+    const wrapper = mount(ComicReader, { props: { manifest } })
+    expect(wrapper.get('.kr-paged').classes()).toContain('kr-paged--fit-screen')
+
+    await wrapper.setProps({ config: { pagedScale: 'width' } })
+    expect(wrapper.get('.kr-paged').classes()).not.toContain('kr-paged--fit-screen')
+  })
+
   it('switches to a dependency-free webtoon view and emits settings', async () => {
     const wrapper = mount(ComicReader, {
       props: { manifest, config: { direction: 'webtoon' } },
