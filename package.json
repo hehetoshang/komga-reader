@@ -28,6 +28,7 @@
     "dev": "vite --config vite.demo.config.ts",
     "build": "vite build && vue-tsc -p tsconfig.build.json",
     "build:demo": "vite build --config vite.demo.config.ts",
+    "prepare": "npm run build",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",

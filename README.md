@@ -4,7 +4,7 @@
 
 A standalone Vue 3 comic image reader driven by an ordered page manifest. It keeps the independently useful parts of Komga's image reader without requiring a Komga server, account, API client, Vuex store, or router.
 
-No npm release has been published. This repository currently provides source and build artifacts only.
+No npm release has been published. Git installs build the package locally from the repository source.
 
 ## Features
 
@@ -22,10 +22,10 @@ See [Upstream audit and extraction map](docs/UPSTREAM_AUDIT.md) for exact source
 ## Install from source
 
 ```bash
-npm install github:hehetoshang/komga-reader
+npm install github:hehetoshang/komga-reader#<commit>
 ```
 
-The package is intentionally **not published to npm** in this phase.
+Pin an immutable commit in applications. The package's `prepare` hook builds its JavaScript, CSS, and declarations during a Git install. The package is intentionally **not published to npm** in this phase.
 
 ## Basic usage
 
