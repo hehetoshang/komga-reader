@@ -9,6 +9,7 @@
   ],
   "files": [
     "dist",
+    "browser-dist",
     "README.md",
     "LICENSE",
     "NOTICE"
@@ -26,7 +27,11 @@
   },
   "scripts": {
     "dev": "vite --config vite.demo.config.ts",
-    "build": "vite build && vue-tsc -p tsconfig.build.json",
+    "build": "npm run build:library && npm run build:browser && npm run check:browser-dist && npm run build:types",
+    "build:library": "vite build",
+    "build:browser": "vite build --config vite.browser.config.ts",
+    "build:types": "vue-tsc -p tsconfig.build.json",
+    "check:browser-dist": "node scripts/check-browser-dist.mjs",
     "build:demo": "vite build --config vite.demo.config.ts",
     "prepare": "npm run build",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json",

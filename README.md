@@ -4,7 +4,7 @@
 
 A standalone Vue 3 comic image reader driven by an ordered page manifest. It keeps the independently useful parts of Komga's image reader without requiring a Komga server, account, API client, Vuex store, or router.
 
-No npm release has been published. Git installs build the package locally from the repository source.
+No npm release has been published. The project builds both a Vue library package and a self-contained browser bundle suitable for Candle Reader-style versioned static hosting.
 
 ## Features
 
@@ -15,19 +15,44 @@ No npm release has been published. Git installs build the package locally from t
 - keyboard, click-zone, slider, and swipe navigation;
 - nearby-page preloading, fullscreen, thumbnail explorer, and reader settings;
 - typed progress, exit, configuration, and actionable error events;
-- no runtime dependency except the Vue 3 peer dependency.
+- Vue library mode has only the Vue 3 peer dependency; the standalone browser bundle includes its isolated runtime and requires no host framework.
 
 See [Upstream audit and extraction map](docs/UPSTREAM_AUDIT.md) for exact source, dependency, style, test, asset, and license findings. Every removed or deferred upstream capability is listed there with a reason.
 
-## Install from source
+## Standalone browser usage
+
+`npm run build:browser` creates `browser-dist/komga-reader.es.js`, `browser-dist/komga-reader.umd.js`, and `browser-dist/style.css`. The JavaScript includes Vue and exposes a lifecycle facade, so the host can pin and serve these files without npm installation or a host Vue runtime:
+
+```html
+<link rel="stylesheet" href="/static/komga-reader/style.css?v=<version>">
+<div id="reader"></div>
+<script type="module">
+  import { Reader } from '/static/komga-reader/komga-reader.es.js?v=<version>'
+
+  const reader = new Reader('#reader', {
+    manifest,
+    initialProgress,
+    onProgress: persistProgress,
+    onExit: ({ progress }) => closeReader(progress),
+    onError: showReaderError,
+  })
+
+  // Destroy on route teardown. It is safe to call more than once.
+  window.addEventListener('pagehide', () => reader.destroy(), { once: true })
+</script>
+```
+
+The facade also exposes `goTo(oneBasedPage)`, `next()`, `previous()`, and `toggleFullscreen()`. Applications should commit or download an immutable build, serve it from the same origin, and use a pinned version in asset URLs.
+
+## Install the Vue library from source
 
 ```bash
 npm install github:hehetoshang/komga-reader#<commit>
 ```
 
-Pin an immutable commit in applications. The package's `prepare` hook builds its JavaScript, CSS, and declarations during a Git install. The package is intentionally **not published to npm** in this phase.
+Pin an immutable commit in applications. The package's `prepare` hook builds its JavaScript, CSS, declarations, and standalone browser assets during a Git install. The package is intentionally **not published to npm** in this phase.
 
-## Basic usage
+## Vue component usage
 
 ```vue
 <script setup lang="ts">
@@ -142,7 +167,7 @@ The demo manifest points only to SVG fixtures under `public/demo-pages/`. It mak
 
 ## Talebook integration
 
-Talebook's Nuxt 4/Vue 3 frontend can consume the component directly. PR [`talebook/talebook#1012`](https://github.com/talebook/talebook/pull/1012) already exposes `media_type`, `online_readable`, downloadable formats, and a generic 8 KiB JSON progress endpoint. It intentionally does **not** expose comic pages yet, so an authenticated, resource-bounded page manifest endpoint remains a stage-2 server responsibility.
+Talebook can consume the standalone browser facade from its versioned public static directory, matching its existing Candle Reader distribution model and avoiding a Git dependency during the Nuxt/Docker install. The same component remains available to other Vue 3 hosts. PR [`talebook/talebook#1012`](https://github.com/talebook/talebook/pull/1012) owns the authenticated, resource-bounded manifest, image, and progress endpoints.
 
 The exact adapter, proposed response shape, existing progress calls, and route behavior are documented in [Talebook integration contract](docs/TALEBOOK_INTEGRATION.md). That boundary is explicit so this package does not silently retain Komga API/store/router coupling.
 
