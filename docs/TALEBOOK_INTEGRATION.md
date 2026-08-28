@@ -2,7 +2,7 @@
 
 ## Why this boundary fits Talebook
 
-Talebook PR [#1012](https://github.com/talebook/talebook/pull/1012) uses Nuxt 4, Vue 3.5, TypeScript-capable SFC tooling, Vuetify's Nuxt module, Pinia, and Vue Router 4. A Vue 3 component with plain DOM/CSS therefore integrates directly. Importing Komga's Vue 2 view would introduce incompatible Vuetify 2, Vuex, router, and Komga service assumptions.
+Talebook already ships Candle Reader as versioned static JavaScript. `komga-reader` therefore provides a self-contained `Reader` browser facade in addition to its Vue component: Talebook can pin and serve the built ESM/CSS without adding a Git npm dependency, while the facade remains isolated from Vuetify, Pinia, Vue Router, Talebook stores, and Komga services.
 
 The PR's book response adds:
 
@@ -42,93 +42,26 @@ GET /api/book/:id/comic/pages/:pageId
 
 The backend must retain Talebook's archive security budgets, reject traversal/encryption/bombs, avoid trusting extensions, validate image entries, stream bounded bytes, authorize every request, and bind stable page ids to the current format revision. `Cache-Control`, range support, and thumbnail variants are server choices.
 
-## Nuxt adapter example
+## Static browser adapter example
 
-```vue
-<script setup lang="ts">
-import { ComicReader } from '@hehetoshang/komga-reader'
-import '@hehetoshang/komga-reader/style.css'
-import type {
-  InitialReaderProgress,
-  PageManifest,
-  ReaderError,
-  ReaderProgress,
-} from '@hehetoshang/komga-reader'
+Build with `npm run build:browser`, copy `browser-dist/komga-reader.es.js` and `browser-dist/style.css` to a versioned same-origin static directory, then dynamically load the facade only on the comic route:
 
-const route = useRoute()
-const bid = Number(route.params.bid)
-const backend = useBackend()
+```ts
+const moduleUrl = '/static/komga-reader/komga-reader.es.js?v=<pinned-version>'
+const { Reader } = await import(/* @vite-ignore */ moduleUrl)
 
-const [{ data: source }, { data: saved }] = await Promise.all([
-  useAsyncData(`comic-pages-${bid}`, () => backend(`/book/${bid}/comic/pages`)),
-  useAsyncData(`comic-progress-${bid}`, () => backend(`/book/${bid}/progress`)),
-])
-
-const manifest = computed<PageManifest>(() => ({
-  id: bid,
-  title: source.value.title,
-  pages: source.value.pages
-    .toSorted((a, b) => a.index - b.index)
-    .map(page => ({
-      id: page.id,
-      src: page.url,
-      width: page.width,
-      height: page.height,
-      mimeType: page.mime_type,
-    })),
-}))
-
-const initialProgress = computed<InitialReaderProgress>(() => {
-  const progress = saved.value?.progress
-  return progress?.kind === 'comic' && progress?.version === 1
-    ? { pageId: progress.pageId, pageIndex: progress.pageIndex }
-    : { pageIndex: 0 }
+const reader = new Reader(readerElement, {
+  manifest,
+  initialProgress,
+  onProgress: persistProgress,
+  onExit: ({ progress }) => closeReader(progress),
+  onError: handleError,
 })
 
-let timer: ReturnType<typeof setTimeout> | undefined
-function persistProgress(progress: ReaderProgress) {
-  clearTimeout(timer)
-  timer = setTimeout(() => backend(`/book/${bid}/progress`, {
-    method: 'POST',
-    body: {
-      progress: {
-        kind: 'comic',
-        version: 1,
-        pageId: progress.pageId,
-        pageIndex: progress.pageIndex,
-        percent: progress.percent,
-        completed: progress.completed,
-      },
-    },
-  }), 250)
-}
-
-function handleError(error: ReaderError) {
-  useAlert().error(error.message)
-}
-</script>
-
-<template>
-  <div class="comic-reader-route">
-    <ComicReader
-      :manifest="manifest"
-      :initial-progress="initialProgress"
-      @progress="persistProgress"
-      @exit="navigateTo(`/book/${bid}`)"
-      @error="handleError"
-    />
-  </div>
-</template>
-
-<style scoped>
-.comic-reader-route {
-  width: 100%;
-  height: 100dvh;
-}
-</style>
+onBeforeUnmount(() => reader.destroy())
 ```
 
-The example's page routes are deliberately marked as proposed. The progress routes and generic object shape already exist in PR #1012.
+The browser bundle includes an isolated Vue runtime, has no bare `vue` import, and does not require a global `Vue`. Talebook still owns all API calls and contract validation. The facade only receives a validated manifest and callback functions; `destroy()` unmounts its private application and is idempotent.
 
 ## Routing and book model behavior
 
