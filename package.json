@@ -12,7 +12,8 @@
     "browser-dist",
     "README.md",
     "LICENSE",
-    "NOTICE"
+    "NOTICE",
+    "THIRD_PARTY_NOTICES"
   ],
   "main": "./dist/komga-reader.cjs",
   "module": "./dist/komga-reader.js",

@@ -182,4 +182,4 @@ npm run check
 
 ## License
 
-MIT. See [LICENSE](LICENSE) and [NOTICE](NOTICE). Adapted Komga portions retain Komga's MIT copyright notice. No Komga image/font/binary asset or Readium EPUB stylesheet is copied.
+MIT. See [LICENSE](LICENSE), [NOTICE](NOTICE), and [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES). Adapted Komga portions retain Komga's MIT copyright notice. The self-contained browser bundle includes Vue under its MIT license. No Komga image/font/binary asset or Readium EPUB stylesheet is copied.
